@@ -121,6 +121,14 @@
     OS << " \"" << SA->getReplacement() << "\"";
     OS << " " << SA->getPriority();
   }
+  void VisitBTFDeclTagAttr(const BTFDeclTagAttr *A) {
+    const auto *SA = cast<BTFDeclTagAttr>(A); (void)SA;
+    OS << " \"" << SA->getBTFDeclTag() << "\"";
+  }
+  void VisitBTFTypeTagAttr(const BTFTypeTagAttr *A) {
+    const auto *SA = cast<BTFTypeTagAttr>(A); (void)SA;
+    OS << " \"" << SA->getBTFTypeTag() << "\"";
+  }
   void VisitBlocksAttr(const BlocksAttr *A) {
     const auto *SA = cast<BlocksAttr>(A); (void)SA;
     switch(SA->getType()) {
@@ -128,6 +136,16 @@
       OS << " ByRef";
       break;
     }
+  }
+  void VisitBuiltinAttr(const BuiltinAttr *A) {
+    const auto *SA = cast<BuiltinAttr>(A); (void)SA;
+    OS << " " << SA->getID();
+  }
+  void VisitBuiltinAliasAttr(const BuiltinAliasAttr *A) {
+    const auto *SA = cast<BuiltinAliasAttr>(A); (void)SA;
+    OS << " " << A->getSpelling();
+    if (SA->getBuiltinName())
+      OS << " " << SA->getBuiltinName()->getName();
   }
   void VisitCFGuardAttr(const CFGuardAttr *A) {
     const auto *SA = cast<CFGuardAttr>(A); (void)SA;
@@ -212,6 +230,13 @@
     const auto *SA = cast<DestructorAttr>(A); (void)SA;
     OS << " " << SA->getPriority();
   }
+  void VisitDiagnoseAsBuiltinAttr(const DiagnoseAsBuiltinAttr *A) {
+    const auto *SA = cast<DiagnoseAsBuiltinAttr>(A); (void)SA;
+    OS << " ";
+    dumpBareDeclRef(SA->getFunction());
+    for (const auto &Val : SA->argIndices())
+      OS << " " << Val;
+  }
   void VisitDiagnoseIfAttr(const DiagnoseIfAttr *A) {
     const auto *SA = cast<DiagnoseIfAttr>(A); (void)SA;
     OS << " \"" << SA->getMessage() << "\"";
@@ -249,6 +274,11 @@
       OS << " Open";
       break;
     }
+  }
+  void VisitErrorAttr(const ErrorAttr *A) {
+    const auto *SA = cast<ErrorAttr>(A); (void)SA;
+    OS << " " << A->getSpelling();
+    OS << " \"" << SA->getUserDiagnostic() << "\"";
   }
   void VisitExternalSourceSymbolAttr(const ExternalSourceSymbolAttr *A) {
     const auto *SA = cast<ExternalSourceSymbolAttr>(A); (void)SA;
@@ -354,6 +384,10 @@
       OS << " Full";
       break;
     }
+  }
+  void VisitM68kInterruptAttr(const M68kInterruptAttr *A) {
+    const auto *SA = cast<M68kInterruptAttr>(A); (void)SA;
+    OS << " " << SA->getNumber();
   }
   void VisitMSInheritanceAttr(const MSInheritanceAttr *A) {
     const auto *SA = cast<MSInheritanceAttr>(A); (void)SA;
@@ -520,6 +554,19 @@
   void VisitOMPDeclareVariantAttr(const OMPDeclareVariantAttr *A) {
     const auto *SA = cast<OMPDeclareVariantAttr>(A); (void)SA;
     OS << " " << SA->getTraitInfos();
+    for (OMPDeclareVariantAttr::appendArgs_iterator I = SA->appendArgs_begin(), E = SA->appendArgs_end(); I != E; ++I) {
+      switch(*I) {
+    case OMPDeclareVariantAttr::Target:
+      OS << " Target";
+      break;
+    case OMPDeclareVariantAttr::TargetSync:
+      OS << " TargetSync";
+      break;
+    case OMPDeclareVariantAttr::Target_TargetSync:
+      OS << " Target_TargetSync";
+      break;
+      }
+    }
   }
   void VisitObjCBridgeAttr(const ObjCBridgeAttr *A) {
     const auto *SA = cast<ObjCBridgeAttr>(A); (void)SA;
@@ -772,6 +819,24 @@
     if (SA->getCompletionHandlerIndex().isValid())
       OS << " " << SA->getCompletionHandlerIndex().getSourceIndex();
   }
+  void VisitSwiftAsyncErrorAttr(const SwiftAsyncErrorAttr *A) {
+    const auto *SA = cast<SwiftAsyncErrorAttr>(A); (void)SA;
+    switch(SA->getConvention()) {
+    case SwiftAsyncErrorAttr::None:
+      OS << " None";
+      break;
+    case SwiftAsyncErrorAttr::NonNullError:
+      OS << " NonNullError";
+      break;
+    case SwiftAsyncErrorAttr::ZeroArgument:
+      OS << " ZeroArgument";
+      break;
+    case SwiftAsyncErrorAttr::NonZeroArgument:
+      OS << " NonZeroArgument";
+      break;
+    }
+    OS << " " << SA->getHandlerParamIdx();
+  }
   void VisitSwiftAsyncNameAttr(const SwiftAsyncNameAttr *A) {
     const auto *SA = cast<SwiftAsyncNameAttr>(A); (void)SA;
     OS << " \"" << SA->getName() << "\"";
@@ -827,6 +892,11 @@
   void VisitTargetAttr(const TargetAttr *A) {
     const auto *SA = cast<TargetAttr>(A); (void)SA;
     OS << " \"" << SA->getFeaturesStr() << "\"";
+  }
+  void VisitTargetClonesAttr(const TargetClonesAttr *A) {
+    const auto *SA = cast<TargetClonesAttr>(A); (void)SA;
+    for (const auto &Val : SA->featuresStrs())
+      OS << " " << Val;
   }
   void VisitTestTypestateAttr(const TestTypestateAttr *A) {
     const auto *SA = cast<TestTypestateAttr>(A); (void)SA;

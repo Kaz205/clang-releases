@@ -105,8 +105,8 @@ public:
   /// Check whether PrecompiledPreamble can be reused for the new contents(\p
   /// MainFileBuffer) of the main file.
   bool CanReuse(const CompilerInvocation &Invocation,
-                const llvm::MemoryBuffer *MainFileBuffer, PreambleBounds Bounds,
-                llvm::vfs::FileSystem *VFS) const;
+                const llvm::MemoryBufferRef &MainFileBuffer,
+                PreambleBounds Bounds, llvm::vfs::FileSystem &VFS) const;
 
   /// Changes options inside \p CI to use PCH from this preamble. Also remaps
   /// main file to \p MainFileBuffer and updates \p VFS to ensure the preamble
@@ -274,7 +274,7 @@ class PreambleCallbacks {
 public:
   virtual ~PreambleCallbacks() = default;
 
-  /// Called before FrontendAction::BeginSourceFile.
+  /// Called before FrontendAction::Execute.
   /// Can be used to store references to various CompilerInstance fields
   /// (e.g. SourceManager) that may be interesting to the consumers of other
   /// callbacks.
@@ -291,7 +291,7 @@ public:
   /// used instead, but having only this method allows a simpler API.
   virtual void HandleTopLevelDecl(DeclGroupRef DG);
   /// Creates wrapper class for PPCallbacks so we can also process information
-  /// about includes that are inside of a preamble
+  /// about includes that are inside of a preamble. Called after BeforeExecute.
   virtual std::unique_ptr<PPCallbacks> createPPCallbacks();
   /// The returned CommentHandler will be added to the preprocessor if not null.
   virtual CommentHandler *getCommentHandler();

@@ -29,6 +29,7 @@
   __interceptor_clock_getres;
   __interceptor_clock_gettime;
   __interceptor_clock_settime;
+  __interceptor_clone;
   __interceptor_close;
   __interceptor_closedir;
   __interceptor_connect;
@@ -74,6 +75,7 @@
   __interceptor_getcwd;
   __interceptor_getgrgid;
   __interceptor_getgrnam;
+  __interceptor_getgrouplist;
   __interceptor_getgroups;
   __interceptor_gethostbyaddr;
   __interceptor_gethostbyname;
@@ -83,6 +85,9 @@
   __interceptor_getitimer;
   __interceptor_getmntent;
   __interceptor_getnameinfo;
+  __interceptor_getnetbyaddr;
+  __interceptor_getnetbyname;
+  __interceptor_getnetent;
   __interceptor_getpeername;
   __interceptor_getprotobyname;
   __interceptor_getprotobynumber;
@@ -156,6 +161,8 @@
   __interceptor_poll;
   __interceptor_popen;
   __interceptor_posix_memalign;
+  __interceptor_posix_spawn;
+  __interceptor_posix_spawnp;
   __interceptor_prctl;
   __interceptor_pread;
   __interceptor_printf;
@@ -182,6 +189,7 @@
   __interceptor_pthread_create;
   __interceptor_pthread_detach;
   __interceptor_pthread_exit;
+  __interceptor_pthread_getcpuclockid;
   __interceptor_pthread_getschedparam;
   __interceptor_pthread_join;
   __interceptor_pthread_kill;
@@ -245,9 +253,11 @@
   __interceptor_sem_destroy;
   __interceptor_sem_getvalue;
   __interceptor_sem_init;
+  __interceptor_sem_open;
   __interceptor_sem_post;
   __interceptor_sem_timedwait;
   __interceptor_sem_trywait;
+  __interceptor_sem_unlink;
   __interceptor_sem_wait;
   __interceptor_send;
   __interceptor_sendmmsg;
@@ -423,6 +433,7 @@
   __sanitizer_syscall_post_impl_epoll_create1;
   __sanitizer_syscall_post_impl_epoll_ctl;
   __sanitizer_syscall_post_impl_epoll_pwait;
+  __sanitizer_syscall_post_impl_epoll_pwait2;
   __sanitizer_syscall_post_impl_epoll_wait;
   __sanitizer_syscall_post_impl_eventfd;
   __sanitizer_syscall_post_impl_eventfd2;
@@ -731,6 +742,7 @@
   __sanitizer_syscall_pre_impl_epoll_create1;
   __sanitizer_syscall_pre_impl_epoll_ctl;
   __sanitizer_syscall_pre_impl_epoll_pwait;
+  __sanitizer_syscall_pre_impl_epoll_pwait2;
   __sanitizer_syscall_pre_impl_epoll_wait;
   __sanitizer_syscall_pre_impl_eventfd;
   __sanitizer_syscall_pre_impl_eventfd2;
@@ -1071,6 +1083,7 @@
   clock_getres;
   clock_gettime;
   clock_settime;
+  clone;
   close;
   closedir;
   connect;
@@ -1116,6 +1129,7 @@
   getcwd;
   getgrgid;
   getgrnam;
+  getgrouplist;
   getgroups;
   gethostbyaddr;
   gethostbyname;
@@ -1125,6 +1139,9 @@
   getitimer;
   getmntent;
   getnameinfo;
+  getnetbyaddr;
+  getnetbyname;
+  getnetent;
   getpeername;
   getprotobyname;
   getprotobynumber;
@@ -1197,6 +1214,8 @@
   poll;
   popen;
   posix_memalign;
+  posix_spawn;
+  posix_spawnp;
   prctl;
   pread;
   printf;
@@ -1217,6 +1236,7 @@
   pthread_create;
   pthread_detach;
   pthread_exit;
+  pthread_getcpuclockid;
   pthread_getschedparam;
   pthread_join;
   pthread_kill;
@@ -1279,9 +1299,11 @@
   sem_destroy;
   sem_getvalue;
   sem_init;
+  sem_open;
   sem_post;
   sem_timedwait;
   sem_trywait;
+  sem_unlink;
   sem_wait;
   send;
   sendmmsg;

@@ -76,7 +76,7 @@ struct LoadCommand {
   std::vector<Section> Sections;
   std::vector<MachO::build_tool_version> Tools;
   std::vector<llvm::yaml::Hex8> PayloadBytes;
-  std::string PayloadString;
+  std::string Content;
   uint64_t ZeroPadBytes;
 };
 
@@ -131,6 +131,7 @@ struct Object {
   std::vector<LoadCommand> LoadCommands;
   std::vector<Section> Sections;
   LinkEditData LinkEdit;
+  Optional<llvm::yaml::BinaryRef> RawLinkEditSegment;
   DWARFYAML::Data DWARF;
 };
 

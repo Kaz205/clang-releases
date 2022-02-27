@@ -486,9 +486,21 @@ public:
            // allocated on device, which are a subset of __global.
            (A == LangAS::opencl_global && (B == LangAS::opencl_global_device ||
                                            B == LangAS::opencl_global_host)) ||
+           (A == LangAS::sycl_global && (B == LangAS::sycl_global_device ||
+                                         B == LangAS::sycl_global_host)) ||
            // Consider pointer size address spaces to be equivalent to default.
            ((isPtrSizeAddressSpace(A) || A == LangAS::Default) &&
-            (isPtrSizeAddressSpace(B) || B == LangAS::Default));
+            (isPtrSizeAddressSpace(B) || B == LangAS::Default)) ||
+           // Default is a superset of SYCL address spaces.
+           (A == LangAS::Default &&
+            (B == LangAS::sycl_private || B == LangAS::sycl_local ||
+             B == LangAS::sycl_global || B == LangAS::sycl_global_device ||
+             B == LangAS::sycl_global_host)) ||
+           // In HIP device compilation, any cuda address space is allowed
+           // to implicitly cast into the default address space.
+           (A == LangAS::Default &&
+            (B == LangAS::cuda_constant || B == LangAS::cuda_device ||
+             B == LangAS::cuda_shared));
   }
 
   /// Returns true if the address space in these qualifiers is equal to or
@@ -1991,6 +2003,7 @@ public:
   bool isFloat16Type() const;      // C11 extension ISO/IEC TS 18661
   bool isBFloat16Type() const;
   bool isFloat128Type() const;
+  bool isIbm128Type() const;
   bool isRealType() const;         // C99 6.2.5p17 (real floating + integer)
   bool isArithmeticType() const;   // C99 6.2.5p18 (integer + floating)
   bool isVoidType() const;         // C99 6.2.5p19
@@ -2492,6 +2505,9 @@ public:
 // PPC MMA Types
 #define PPC_VECTOR_TYPE(Name, Id, Size) Id,
 #include "clang/Basic/PPCTypes.def"
+// RVV Types
+#define RVV_TYPE(Name, Id, SingletonId) Id,
+#include "clang/Basic/RISCVVTypes.def"
 // All other builtin types
 #define BUILTIN_TYPE(Id, SingletonId) Id,
 #define LAST_BUILTIN_TYPE(Id) LastKind = Id
@@ -2535,7 +2551,7 @@ public:
   }
 
   bool isFloatingPoint() const {
-    return getKind() >= Half && getKind() <= Float128;
+    return getKind() >= Half && getKind() <= Ibm128;
   }
 
   /// Determines whether the given kind corresponds to a placeholder type.
@@ -3440,10 +3456,6 @@ class ConstantMatrixType final : public MatrixType {
 protected:
   friend class ASTContext;
 
-  /// The element type of the matrix.
-  // FIXME: Appears to be unused? There is also MatrixType::ElementType...
-  QualType ElementType;
-
   /// Number of rows and columns.
   unsigned NumRows;
   unsigned NumColumns;
@@ -3513,13 +3525,9 @@ class DependentSizedMatrixType final : public MatrixType {
                            Expr *ColumnExpr, SourceLocation loc);
 
 public:
-  QualType getElementType() const { return ElementType; }
   Expr *getRowExpr() const { return RowExpr; }
   Expr *getColumnExpr() const { return ColumnExpr; }
   SourceLocation getAttributeLoc() const { return loc; }
-
-  bool isSugared() const { return false; }
-  QualType desugar() const { return QualType(this, 0); }
 
   static bool classof(const Type *T) {
     return T->getTypeClass() == DependentSizedMatrix;
@@ -4936,29 +4944,29 @@ public:
 /// type-dependent, there is no deduced type and the type is canonical. In
 /// the latter case, it is also a dependent type.
 class DeducedType : public Type {
+  QualType DeducedAsType;
+
 protected:
   DeducedType(TypeClass TC, QualType DeducedAsType,
-              TypeDependence ExtraDependence)
-      : Type(TC,
-             // FIXME: Retain the sugared deduced type?
-             DeducedAsType.isNull() ? QualType(this, 0)
-                                    : DeducedAsType.getCanonicalType(),
+              TypeDependence ExtraDependence, QualType Canon)
+      : Type(TC, Canon,
              ExtraDependence | (DeducedAsType.isNull()
                                     ? TypeDependence::None
                                     : DeducedAsType->getDependence() &
-                                          ~TypeDependence::VariablyModified)) {}
+                                          ~TypeDependence::VariablyModified)),
+        DeducedAsType(DeducedAsType) {}
 
 public:
-  bool isSugared() const { return !isCanonicalUnqualified(); }
-  QualType desugar() const { return getCanonicalTypeInternal(); }
-
-  /// Get the type deduced for this placeholder type, or null if it's
-  /// either not been deduced or was deduced to a dependent type.
-  QualType getDeducedType() const {
-    return !isCanonicalUnqualified() ? getCanonicalTypeInternal() : QualType();
+  bool isSugared() const { return !DeducedAsType.isNull(); }
+  QualType desugar() const {
+    return isSugared() ? DeducedAsType : QualType(this, 0);
   }
+
+  /// Get the type deduced for this placeholder type, or null if it
+  /// has not been deduced.
+  QualType getDeducedType() const { return DeducedAsType; }
   bool isDeduced() const {
-    return !isCanonicalUnqualified() || isDependentType();
+    return !DeducedAsType.isNull() || isDependentType();
   }
 
   static bool classof(const Type *T) {
@@ -4975,7 +4983,7 @@ class alignas(8) AutoType : public DeducedType, public llvm::FoldingSetNode {
   ConceptDecl *TypeConstraintConcept;
 
   AutoType(QualType DeducedAsType, AutoTypeKeyword Keyword,
-           TypeDependence ExtraDependence, ConceptDecl *CD,
+           TypeDependence ExtraDependence, QualType Canon, ConceptDecl *CD,
            ArrayRef<TemplateArgument> TypeConstraintArgs);
 
   const TemplateArgument *getArgBuffer() const {
@@ -5049,7 +5057,9 @@ class DeducedTemplateSpecializationType : public DeducedType,
                     toTypeDependence(Template.getDependence()) |
                         (IsDeducedAsDependent
                              ? TypeDependence::DependentInstantiation
-                             : TypeDependence::None)),
+                             : TypeDependence::None),
+                    DeducedAsType.isNull() ? QualType(this, 0)
+                                           : DeducedAsType.getCanonicalType()),
         Template(Template) {}
 
 public:
@@ -5063,8 +5073,10 @@ public:
   static void Profile(llvm::FoldingSetNodeID &ID, TemplateName Template,
                       QualType Deduced, bool IsDependent) {
     Template.Profile(ID);
-    ID.AddPointer(Deduced.getAsOpaquePtr());
-    ID.AddBoolean(IsDependent);
+    QualType CanonicalType =
+        Deduced.isNull() ? Deduced : Deduced.getCanonicalType();
+    ID.AddPointer(CanonicalType.getAsOpaquePtr());
+    ID.AddBoolean(IsDependent || Template.isDependent());
   }
 
   static bool classof(const Type *T) {
@@ -5412,7 +5424,14 @@ class ElaboratedType final
   ElaboratedType(ElaboratedTypeKeyword Keyword, NestedNameSpecifier *NNS,
                  QualType NamedType, QualType CanonType, TagDecl *OwnedTagDecl)
       : TypeWithKeyword(Keyword, Elaborated, CanonType,
-                        NamedType->getDependence()),
+                        // Any semantic dependence on the qualifier will have
+                        // been incorporated into NamedType. We still need to
+                        // track syntactic (instantiation / error / pack)
+                        // dependence on the qualifier.
+                        NamedType->getDependence() |
+                            (NNS ? toSyntacticDependence(
+                                       toTypeDependence(NNS->getDependence()))
+                                 : TypeDependence::None)),
         NNS(NNS), NamedType(NamedType) {
     ElaboratedTypeBits.HasOwnedTagDecl = false;
     if (OwnedTagDecl) {
@@ -6001,10 +6020,9 @@ inline ObjCProtocolDecl **ObjCTypeParamType::getProtocolStorageImpl() {
 class ObjCInterfaceType : public ObjCObjectType {
   friend class ASTContext; // ASTContext creates these.
   friend class ASTReader;
-  friend class ObjCInterfaceDecl;
   template <class T> friend class serialization::AbstractTypeReader;
 
-  mutable ObjCInterfaceDecl *Decl;
+  ObjCInterfaceDecl *Decl;
 
   ObjCInterfaceType(const ObjCInterfaceDecl *D)
       : ObjCObjectType(Nonce_ObjCInterface),
@@ -6012,7 +6030,7 @@ class ObjCInterfaceType : public ObjCObjectType {
 
 public:
   /// Get the declaration of this interface.
-  ObjCInterfaceDecl *getDecl() const { return Decl; }
+  ObjCInterfaceDecl *getDecl() const;
 
   bool isSugared() const { return false; }
   QualType desugar() const { return QualType(this, 0); }
@@ -6959,6 +6977,10 @@ inline bool Type::isFloat128Type() const {
   return isSpecificBuiltinType(BuiltinType::Float128);
 }
 
+inline bool Type::isIbm128Type() const {
+  return isSpecificBuiltinType(BuiltinType::Ibm128);
+}
+
 inline bool Type::isNullPtrType() const {
   return isSpecificBuiltinType(BuiltinType::NullPtr);
 }
@@ -7127,7 +7149,7 @@ inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &PD,
 /// into a diagnostic with <<.
 inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &PD,
                                              QualType T) {
-  PD.AddTaggedVal(reinterpret_cast<intptr_t>(T.getAsOpaquePtr()),
+  PD.AddTaggedVal(reinterpret_cast<uint64_t>(T.getAsOpaquePtr()),
                   DiagnosticsEngine::ak_qualtype);
   return PD;
 }

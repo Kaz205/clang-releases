@@ -104,6 +104,7 @@
   void VisitOMPAllocateDeclAttr(const OMPAllocateDeclAttr *A) {
     const auto *SA = cast<OMPAllocateDeclAttr>(A); (void)SA;
     Visit(SA->getAllocator());
+    Visit(SA->getAlignment());
   }
   void VisitOMPDeclareSimdDeclAttr(const OMPDeclareSimdDeclAttr *A) {
     const auto *SA = cast<OMPDeclareSimdDeclAttr>(A); (void)SA;
@@ -122,6 +123,10 @@
   void VisitOMPDeclareVariantAttr(const OMPDeclareVariantAttr *A) {
     const auto *SA = cast<OMPDeclareVariantAttr>(A); (void)SA;
     Visit(SA->getVariantFuncRef());
+    for (OMPDeclareVariantAttr::adjustArgsNothing_iterator I = SA->adjustArgsNothing_begin(), E = SA->adjustArgsNothing_end(); I != E; ++I)
+      Visit(*I);
+    for (OMPDeclareVariantAttr::adjustArgsNeedDevicePtr_iterator I = SA->adjustArgsNeedDevicePtr_begin(), E = SA->adjustArgsNeedDevicePtr_end(); I != E; ++I)
+      Visit(*I);
   }
   void VisitOMPReferencedVarAttr(const OMPReferencedVarAttr *A) {
     const auto *SA = cast<OMPReferencedVarAttr>(A); (void)SA;

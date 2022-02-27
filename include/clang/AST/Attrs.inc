@@ -9,6 +9,13 @@
 #ifndef LLVM_CLANG_ATTR_CLASSES_INC
 #define LLVM_CLANG_ATTR_CLASSES_INC
 
+static inline void DelimitAttributeArgument(raw_ostream& OS, bool& IsFirst) {
+  if (IsFirst) {
+    IsFirst = false;
+    OS << "(";
+  } else
+    OS << ", ";
+}
 class AArch64VectorPcsAttr : public InheritableAttr {
 public:
   enum Spelling {
@@ -1624,6 +1631,7 @@ public:
 static llvm::StringRef getPrettyPlatformName(llvm::StringRef Platform) {
     return llvm::StringSwitch<llvm::StringRef>(Platform)
              .Case("android", "Android")
+             .Case("fuchsia", "Fuchsia")
              .Case("ios", "iOS")
              .Case("macos", "macOS")
              .Case("tvos", "tvOS")
@@ -1632,6 +1640,8 @@ static llvm::StringRef getPrettyPlatformName(llvm::StringRef Platform) {
              .Case("macos_app_extension", "macOS (App Extension)")
              .Case("tvos_app_extension", "tvOS (App Extension)")
              .Case("watchos_app_extension", "watchOS (App Extension)")
+             .Case("maccatalyst", "macCatalyst")
+             .Case("maccatalyst_app_extension", "macCatalyst (App Extension)")
              .Case("swift", "Swift")
              .Default(llvm::StringRef());
 }
@@ -1645,6 +1655,8 @@ static llvm::StringRef getPlatformNameSourceSpelling(llvm::StringRef Platform) {
              .Case("macos_app_extension", "macOSApplicationExtension")
              .Case("tvos_app_extension", "tvOSApplicationExtension")
              .Case("watchos_app_extension", "watchOSApplicationExtension")
+             .Case("maccatalyst", "macCatalyst")
+             .Case("maccatalyst_app_extension", "macCatalystApplicationExtension")
              .Case("zos", "z/OS")
              .Default(Platform);
 }
@@ -1658,6 +1670,8 @@ static llvm::StringRef canonicalizePlatformName(llvm::StringRef Platform) {
              .Case("macOSApplicationExtension", "macos_app_extension")
              .Case("tvOSApplicationExtension", "tvos_app_extension")
              .Case("watchOSApplicationExtension", "watchos_app_extension")
+             .Case("macCatalyst", "maccatalyst")
+             .Case("macCatalystApplicationExtension", "maccatalyst_app_extension")
              .Default(Platform);
 } 
 
@@ -1691,6 +1705,98 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::BPFPreserveAccessIndex; }
+};
+
+class BTFDeclTagAttr : public InheritableAttr {
+unsigned bTFDeclTagLength;
+char *bTFDeclTag;
+
+public:
+  enum Spelling {
+    GNU_btf_decl_tag = 0,
+    CXX11_clang_btf_decl_tag = 1,
+    C2x_clang_btf_decl_tag = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static BTFDeclTagAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef BTFDeclTag, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static BTFDeclTagAttr *Create(ASTContext &Ctx, llvm::StringRef BTFDeclTag, const AttributeCommonInfo &CommonInfo);
+  static BTFDeclTagAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef BTFDeclTag, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static BTFDeclTagAttr *Create(ASTContext &Ctx, llvm::StringRef BTFDeclTag, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  BTFDeclTagAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , llvm::StringRef BTFDeclTag
+             );
+
+  BTFDeclTagAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  llvm::StringRef getBTFDeclTag() const {
+    return llvm::StringRef(bTFDeclTag, bTFDeclTagLength);
+  }
+  unsigned getBTFDeclTagLength() const {
+    return bTFDeclTagLength;
+  }
+  void setBTFDeclTag(ASTContext &C, llvm::StringRef S) {
+    bTFDeclTagLength = S.size();
+    this->bTFDeclTag = new (C, 1) char [bTFDeclTagLength];
+    if (!S.empty())
+      std::memcpy(this->bTFDeclTag, S.data(), bTFDeclTagLength);
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::BTFDeclTag; }
+};
+
+class BTFTypeTagAttr : public TypeAttr {
+unsigned bTFTypeTagLength;
+char *bTFTypeTag;
+
+public:
+  enum Spelling {
+    GNU_btf_type_tag = 0,
+    CXX11_clang_btf_type_tag = 1,
+    C2x_clang_btf_type_tag = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static BTFTypeTagAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef BTFTypeTag, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static BTFTypeTagAttr *Create(ASTContext &Ctx, llvm::StringRef BTFTypeTag, const AttributeCommonInfo &CommonInfo);
+  static BTFTypeTagAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef BTFTypeTag, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static BTFTypeTagAttr *Create(ASTContext &Ctx, llvm::StringRef BTFTypeTag, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  BTFTypeTagAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , llvm::StringRef BTFTypeTag
+             );
+
+  BTFTypeTagAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  llvm::StringRef getBTFTypeTag() const {
+    return llvm::StringRef(bTFTypeTag, bTFTypeTagLength);
+  }
+  unsigned getBTFTypeTagLength() const {
+    return bTFTypeTagLength;
+  }
+  void setBTFTypeTag(ASTContext &C, llvm::StringRef S) {
+    bTFTypeTagLength = S.size();
+    this->bTFTypeTag = new (C, 1) char [bTFTypeTagLength];
+    if (!S.empty())
+      std::memcpy(this->bTFTypeTag, S.data(), bTFTypeTagLength);
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::BTFTypeTag; }
 };
 
 class BlocksAttr : public InheritableAttr {
@@ -1734,6 +1840,71 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Blocks; }
+};
+
+class BuiltinAttr : public InheritableAttr {
+unsigned iD;
+
+public:
+  // Factory methods
+  static BuiltinAttr *CreateImplicit(ASTContext &Ctx, unsigned ID, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static BuiltinAttr *Create(ASTContext &Ctx, unsigned ID, const AttributeCommonInfo &CommonInfo);
+  static BuiltinAttr *CreateImplicit(ASTContext &Ctx, unsigned ID, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static BuiltinAttr *Create(ASTContext &Ctx, unsigned ID, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  BuiltinAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , unsigned ID
+             );
+
+  BuiltinAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getID() const {
+    return iD;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::Builtin; }
+};
+
+class BuiltinAliasAttr : public Attr {
+IdentifierInfo * builtinName;
+
+public:
+  enum Spelling {
+    CXX11_clang_builtin_alias = 0,
+    C2x_clang_builtin_alias = 1,
+    GNU_clang_builtin_alias = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static BuiltinAliasAttr *CreateImplicit(ASTContext &Ctx, IdentifierInfo * BuiltinName, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static BuiltinAliasAttr *Create(ASTContext &Ctx, IdentifierInfo * BuiltinName, const AttributeCommonInfo &CommonInfo);
+  static BuiltinAliasAttr *CreateImplicit(ASTContext &Ctx, IdentifierInfo * BuiltinName, SourceRange Range, AttributeCommonInfo::Syntax Syntax, BuiltinAliasAttr::Spelling S = static_cast<Spelling>(SpellingNotCalculated));
+  static BuiltinAliasAttr *Create(ASTContext &Ctx, IdentifierInfo * BuiltinName, SourceRange Range, AttributeCommonInfo::Syntax Syntax, BuiltinAliasAttr::Spelling S = static_cast<Spelling>(SpellingNotCalculated));
+
+  // Constructors
+  BuiltinAliasAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , IdentifierInfo * BuiltinName
+             );
+
+  BuiltinAliasAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  Spelling getSemanticSpelling() const;
+  IdentifierInfo * getBuiltinName() const {
+    return builtinName;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::BuiltinAlias; }
 };
 
 class C11NoReturnAttr : public InheritableAttr {
@@ -3209,6 +3380,56 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::Destructor; }
 };
 
+class DiagnoseAsBuiltinAttr : public InheritableAttr {
+FunctionDecl * function;
+
+  unsigned argIndices_Size;
+  unsigned *argIndices_;
+
+public:
+  enum Spelling {
+    GNU_diagnose_as_builtin = 0,
+    CXX11_clang_diagnose_as_builtin = 1,
+    C2x_clang_diagnose_as_builtin = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static DiagnoseAsBuiltinAttr *CreateImplicit(ASTContext &Ctx, FunctionDecl * Function, unsigned *ArgIndices, unsigned ArgIndicesSize, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static DiagnoseAsBuiltinAttr *Create(ASTContext &Ctx, FunctionDecl * Function, unsigned *ArgIndices, unsigned ArgIndicesSize, const AttributeCommonInfo &CommonInfo);
+  static DiagnoseAsBuiltinAttr *CreateImplicit(ASTContext &Ctx, FunctionDecl * Function, unsigned *ArgIndices, unsigned ArgIndicesSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static DiagnoseAsBuiltinAttr *Create(ASTContext &Ctx, FunctionDecl * Function, unsigned *ArgIndices, unsigned ArgIndicesSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  DiagnoseAsBuiltinAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , FunctionDecl * Function
+              , unsigned *ArgIndices, unsigned ArgIndicesSize
+             );
+  DiagnoseAsBuiltinAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , FunctionDecl * Function
+             );
+
+  DiagnoseAsBuiltinAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  FunctionDecl * getFunction() const {
+    return function;
+  }
+
+  typedef unsigned* argIndices_iterator;
+  argIndices_iterator argIndices_begin() const { return argIndices_; }
+  argIndices_iterator argIndices_end() const { return argIndices_ + argIndices_Size; }
+  unsigned argIndices_size() const { return argIndices_Size; }
+  llvm::iterator_range<argIndices_iterator> argIndices() const { return llvm::make_range(argIndices_begin(), argIndices_end()); }
+
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::DiagnoseAsBuiltin; }
+};
+
 class DiagnoseIfAttr : public InheritableAttr {
 Expr * cond;
 
@@ -3293,6 +3514,35 @@ public:
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::DiagnoseIf; }
+};
+
+class DisableSanitizerInstrumentationAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_disable_sanitizer_instrumentation = 0,
+    CXX11_clang_disable_sanitizer_instrumentation = 1,
+    C2x_clang_disable_sanitizer_instrumentation = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static DisableSanitizerInstrumentationAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static DisableSanitizerInstrumentationAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static DisableSanitizerInstrumentationAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static DisableSanitizerInstrumentationAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  DisableSanitizerInstrumentationAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  DisableSanitizerInstrumentationAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::DisableSanitizerInstrumentation; }
 };
 
 class DisableTailCallsAttr : public InheritableAttr {
@@ -3524,6 +3774,62 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::EnumExtensibility; }
+};
+
+class ErrorAttr : public InheritableAttr {
+unsigned userDiagnosticLength;
+char *userDiagnostic;
+
+public:
+  enum Spelling {
+    GNU_error = 0,
+    CXX11_gnu_error = 1,
+    C2x_gnu_error = 2,
+    GNU_warning = 3,
+    CXX11_gnu_warning = 4,
+    C2x_gnu_warning = 5,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static ErrorAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef UserDiagnostic, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static ErrorAttr *Create(ASTContext &Ctx, llvm::StringRef UserDiagnostic, const AttributeCommonInfo &CommonInfo);
+  static ErrorAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef UserDiagnostic, SourceRange Range, AttributeCommonInfo::Syntax Syntax, ErrorAttr::Spelling S = static_cast<Spelling>(SpellingNotCalculated));
+  static ErrorAttr *Create(ASTContext &Ctx, llvm::StringRef UserDiagnostic, SourceRange Range, AttributeCommonInfo::Syntax Syntax, ErrorAttr::Spelling S = static_cast<Spelling>(SpellingNotCalculated));
+
+  // Constructors
+  ErrorAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , llvm::StringRef UserDiagnostic
+             );
+
+  ErrorAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  Spelling getSemanticSpelling() const;
+  bool isError() const { return getAttributeSpellingListIndex() == 0 ||
+    getAttributeSpellingListIndex() == 1 ||
+    getAttributeSpellingListIndex() == 2; }
+  bool isWarning() const { return getAttributeSpellingListIndex() == 3 ||
+    getAttributeSpellingListIndex() == 4 ||
+    getAttributeSpellingListIndex() == 5; }
+  llvm::StringRef getUserDiagnostic() const {
+    return llvm::StringRef(userDiagnostic, userDiagnosticLength);
+  }
+  unsigned getUserDiagnosticLength() const {
+    return userDiagnosticLength;
+  }
+  void setUserDiagnostic(ASTContext &C, llvm::StringRef S) {
+    userDiagnosticLength = S.size();
+    this->userDiagnostic = new (C, 1) char [userDiagnosticLength];
+    if (!S.empty())
+      std::memcpy(this->userDiagnostic, S.data(), userDiagnosticLength);
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::Error; }
 };
 
 class ExcludeFromExplicitInstantiationAttr : public InheritableAttr {
@@ -3988,6 +4294,34 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::GuardedVar; }
+};
+
+class HIPManagedAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_managed = 0,
+    Declspec_managed = 1,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static HIPManagedAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static HIPManagedAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static HIPManagedAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static HIPManagedAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  HIPManagedAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  HIPManagedAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HIPManaged; }
 };
 
 class HotAttr : public InheritableAttr {
@@ -4641,6 +4975,34 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::LoopHint; }
 };
 
+class M68kInterruptAttr : public InheritableAttr {
+unsigned number;
+
+public:
+  // Factory methods
+  static M68kInterruptAttr *CreateImplicit(ASTContext &Ctx, unsigned Number, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static M68kInterruptAttr *Create(ASTContext &Ctx, unsigned Number, const AttributeCommonInfo &CommonInfo);
+  static M68kInterruptAttr *CreateImplicit(ASTContext &Ctx, unsigned Number, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static M68kInterruptAttr *Create(ASTContext &Ctx, unsigned Number, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  M68kInterruptAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , unsigned Number
+             );
+
+  M68kInterruptAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getNumber() const {
+    return number;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::M68kInterrupt; }
+};
+
 class MIGServerRoutineAttr : public InheritableAttr {
 public:
   enum Spelling {
@@ -5218,6 +5580,35 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Mode; }
+};
+
+class MustTailAttr : public StmtAttr {
+public:
+  enum Spelling {
+    GNU_musttail = 0,
+    CXX11_clang_musttail = 1,
+    C2x_clang_musttail = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static MustTailAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static MustTailAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static MustTailAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static MustTailAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  MustTailAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  MustTailAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::MustTail; }
 };
 
 class NSConsumedAttr : public InheritableParamAttr {
@@ -5805,6 +6196,35 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::NoMips16; }
 };
 
+class NoProfileFunctionAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_no_profile_instrument_function = 0,
+    CXX11_gnu_no_profile_instrument_function = 1,
+    C2x_gnu_no_profile_instrument_function = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static NoProfileFunctionAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static NoProfileFunctionAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static NoProfileFunctionAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static NoProfileFunctionAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  NoProfileFunctionAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  NoProfileFunctionAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::NoProfileFunction; }
+};
+
 class NoReturnAttr : public InheritableAttr {
 public:
   enum Spelling {
@@ -5881,6 +6301,10 @@ public:
         Mask |= expandSanitizerGroups(ParsedMask);
       }
       return Mask;
+    }
+
+    bool hasCoverage() const {
+      return llvm::is_contained(sanitizers(), "coverage");
     }
   
 
@@ -6152,17 +6576,20 @@ private:
 
 Expr * allocator;
 
+Expr * alignment;
+
 public:
   // Factory methods
-  static OMPAllocateDeclAttr *CreateImplicit(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
-  static OMPAllocateDeclAttr *Create(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, const AttributeCommonInfo &CommonInfo);
-  static OMPAllocateDeclAttr *CreateImplicit(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
-  static OMPAllocateDeclAttr *Create(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static OMPAllocateDeclAttr *CreateImplicit(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, Expr * Alignment, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static OMPAllocateDeclAttr *Create(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, Expr * Alignment, const AttributeCommonInfo &CommonInfo);
+  static OMPAllocateDeclAttr *CreateImplicit(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, Expr * Alignment, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static OMPAllocateDeclAttr *Create(ASTContext &Ctx, AllocatorTypeTy AllocatorType, Expr * Allocator, Expr * Alignment, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
 
   // Constructors
   OMPAllocateDeclAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
               , AllocatorTypeTy AllocatorType
               , Expr * Allocator
+              , Expr * Alignment
              );
 
   OMPAllocateDeclAttr *clone(ASTContext &C) const;
@@ -6177,6 +6604,10 @@ public:
   static const char *ConvertAllocatorTypeTyToStr(AllocatorTypeTy Val);
   Expr * getAllocator() const {
     return allocator;
+  }
+
+  Expr * getAlignment() const {
+    return alignment;
   }
 
 
@@ -6412,6 +6843,7 @@ public:
     void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const;
     static llvm::Optional<MapTypeTy>
     isDeclareTargetDeclaration(const ValueDecl *VD);
+    static llvm::Optional<OMPDeclareTargetDeclAttr*> getActiveAttr(const ValueDecl *VD);
     static llvm::Optional<DevTypeTy> getDeviceType(const ValueDecl *VD);
     static llvm::Optional<SourceLocation> getLocation(const ValueDecl *VD);
   
@@ -6424,14 +6856,37 @@ Expr * variantFuncRef;
 
 OMPTraitInfo * traitInfos;
 
+  unsigned adjustArgsNothing_Size;
+  Expr * *adjustArgsNothing_;
+
+  unsigned adjustArgsNeedDevicePtr_Size;
+  Expr * *adjustArgsNeedDevicePtr_;
+
+public:
+  enum InteropType {
+    Target,
+    TargetSync,
+    Target_TargetSync
+  };
+private:
+  unsigned appendArgs_Size;
+  InteropType *appendArgs_;
+
 public:
   // Factory methods
-  static OMPDeclareVariantAttr *CreateImplicit(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
-  static OMPDeclareVariantAttr *Create(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, const AttributeCommonInfo &CommonInfo);
-  static OMPDeclareVariantAttr *CreateImplicit(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
-  static OMPDeclareVariantAttr *Create(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static OMPDeclareVariantAttr *CreateImplicit(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, Expr * *AdjustArgsNothing, unsigned AdjustArgsNothingSize, Expr * *AdjustArgsNeedDevicePtr, unsigned AdjustArgsNeedDevicePtrSize, InteropType *AppendArgs, unsigned AppendArgsSize, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static OMPDeclareVariantAttr *Create(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, Expr * *AdjustArgsNothing, unsigned AdjustArgsNothingSize, Expr * *AdjustArgsNeedDevicePtr, unsigned AdjustArgsNeedDevicePtrSize, InteropType *AppendArgs, unsigned AppendArgsSize, const AttributeCommonInfo &CommonInfo);
+  static OMPDeclareVariantAttr *CreateImplicit(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, Expr * *AdjustArgsNothing, unsigned AdjustArgsNothingSize, Expr * *AdjustArgsNeedDevicePtr, unsigned AdjustArgsNeedDevicePtrSize, InteropType *AppendArgs, unsigned AppendArgsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static OMPDeclareVariantAttr *Create(ASTContext &Ctx, Expr * VariantFuncRef, OMPTraitInfo * TraitInfos, Expr * *AdjustArgsNothing, unsigned AdjustArgsNothingSize, Expr * *AdjustArgsNeedDevicePtr, unsigned AdjustArgsNeedDevicePtrSize, InteropType *AppendArgs, unsigned AppendArgsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
 
   // Constructors
+  OMPDeclareVariantAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , Expr * VariantFuncRef
+              , OMPTraitInfo * TraitInfos
+              , Expr * *AdjustArgsNothing, unsigned AdjustArgsNothingSize
+              , Expr * *AdjustArgsNeedDevicePtr, unsigned AdjustArgsNeedDevicePtrSize
+              , InteropType *AppendArgs, unsigned AppendArgsSize
+             );
   OMPDeclareVariantAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
               , Expr * VariantFuncRef
               , OMPTraitInfo * TraitInfos
@@ -6449,6 +6904,29 @@ public:
     return traitInfos;
   }
 
+  typedef Expr ** adjustArgsNothing_iterator;
+  adjustArgsNothing_iterator adjustArgsNothing_begin() const { return adjustArgsNothing_; }
+  adjustArgsNothing_iterator adjustArgsNothing_end() const { return adjustArgsNothing_ + adjustArgsNothing_Size; }
+  unsigned adjustArgsNothing_size() const { return adjustArgsNothing_Size; }
+  llvm::iterator_range<adjustArgsNothing_iterator> adjustArgsNothing() const { return llvm::make_range(adjustArgsNothing_begin(), adjustArgsNothing_end()); }
+
+
+  typedef Expr ** adjustArgsNeedDevicePtr_iterator;
+  adjustArgsNeedDevicePtr_iterator adjustArgsNeedDevicePtr_begin() const { return adjustArgsNeedDevicePtr_; }
+  adjustArgsNeedDevicePtr_iterator adjustArgsNeedDevicePtr_end() const { return adjustArgsNeedDevicePtr_ + adjustArgsNeedDevicePtr_Size; }
+  unsigned adjustArgsNeedDevicePtr_size() const { return adjustArgsNeedDevicePtr_Size; }
+  llvm::iterator_range<adjustArgsNeedDevicePtr_iterator> adjustArgsNeedDevicePtr() const { return llvm::make_range(adjustArgsNeedDevicePtr_begin(), adjustArgsNeedDevicePtr_end()); }
+
+
+  typedef InteropType* appendArgs_iterator;
+  appendArgs_iterator appendArgs_begin() const { return appendArgs_; }
+  appendArgs_iterator appendArgs_end() const { return appendArgs_ + appendArgs_Size; }
+  unsigned appendArgs_size() const { return appendArgs_Size; }
+  llvm::iterator_range<appendArgs_iterator> appendArgs() const { return llvm::make_range(appendArgs_begin(), appendArgs_end()); }
+
+
+  static bool ConvertStrToInteropType(StringRef Val, InteropType &Out);
+  static const char *ConvertInteropTypeToStr(InteropType Val);
 
     OMPTraitInfo &getTraitInfo() { return *traitInfos; }
     void printPrettyPragma(raw_ostream & OS, const PrintingPolicy &Policy)
@@ -7866,7 +8344,7 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::OpenCLPrivateAddressSpace; }
 };
 
-class OpenCLUnrollHintAttr : public InheritableAttr {
+class OpenCLUnrollHintAttr : public StmtAttr {
 unsigned unrollHint;
 
 public:
@@ -7879,6 +8357,8 @@ public:
   // Constructors
   OpenCLUnrollHintAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
               , unsigned UnrollHint
+             );
+  OpenCLUnrollHintAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
              );
 
   OpenCLUnrollHintAttr *clone(ASTContext &C) const;
@@ -9111,6 +9591,35 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::Restrict; }
 };
 
+class RetainAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_retain = 0,
+    CXX11_gnu_retain = 1,
+    C2x_gnu_retain = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static RetainAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static RetainAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static RetainAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static RetainAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  RetainAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  RetainAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::Retain; }
+};
+
 class ReturnTypestateAttr : public InheritableAttr {
 public:
   enum ConsumedState {
@@ -9533,6 +10042,34 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::SpeculativeLoadHardening; }
 };
 
+class StandaloneDebugAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_standalone_debug = 0,
+    CXX11_clang_standalone_debug = 1,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static StandaloneDebugAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static StandaloneDebugAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static StandaloneDebugAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static StandaloneDebugAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  StandaloneDebugAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  StandaloneDebugAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::StandaloneDebug; }
+};
+
 class StdCallAttr : public InheritableAttr {
 public:
   enum Spelling {
@@ -9671,6 +10208,120 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::SwiftAsync; }
+};
+
+class SwiftAsyncCallAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_swiftasynccall = 0,
+    CXX11_clang_swiftasynccall = 1,
+    C2x_clang_swiftasynccall = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static SwiftAsyncCallAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static SwiftAsyncCallAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static SwiftAsyncCallAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static SwiftAsyncCallAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  SwiftAsyncCallAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  SwiftAsyncCallAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::SwiftAsyncCall; }
+};
+
+class SwiftAsyncContextAttr : public ParameterABIAttr {
+public:
+  enum Spelling {
+    GNU_swift_async_context = 0,
+    CXX11_clang_swift_async_context = 1,
+    C2x_clang_swift_async_context = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static SwiftAsyncContextAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static SwiftAsyncContextAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static SwiftAsyncContextAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static SwiftAsyncContextAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  SwiftAsyncContextAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  SwiftAsyncContextAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::SwiftAsyncContext; }
+};
+
+class SwiftAsyncErrorAttr : public InheritableAttr {
+public:
+  enum ConventionKind {
+    None,
+    NonNullError,
+    ZeroArgument,
+    NonZeroArgument
+  };
+private:
+  ConventionKind convention;
+
+unsigned handlerParamIdx;
+
+public:
+  enum Spelling {
+    GNU_swift_async_error = 0,
+    CXX11_clang_swift_async_error = 1,
+    C2x_clang_swift_async_error = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static SwiftAsyncErrorAttr *CreateImplicit(ASTContext &Ctx, ConventionKind Convention, unsigned HandlerParamIdx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static SwiftAsyncErrorAttr *Create(ASTContext &Ctx, ConventionKind Convention, unsigned HandlerParamIdx, const AttributeCommonInfo &CommonInfo);
+  static SwiftAsyncErrorAttr *CreateImplicit(ASTContext &Ctx, ConventionKind Convention, unsigned HandlerParamIdx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static SwiftAsyncErrorAttr *Create(ASTContext &Ctx, ConventionKind Convention, unsigned HandlerParamIdx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  SwiftAsyncErrorAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , ConventionKind Convention
+              , unsigned HandlerParamIdx
+             );
+  SwiftAsyncErrorAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , ConventionKind Convention
+             );
+
+  SwiftAsyncErrorAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  ConventionKind getConvention() const {
+    return convention;
+  }
+
+  static bool ConvertStrToConventionKind(StringRef Val, ConventionKind &Out);
+  static const char *ConvertConventionKindToStr(ConventionKind Val);
+  unsigned getHandlerParamIdx() const {
+    return handlerParamIdx;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::SwiftAsyncError; }
 };
 
 class SwiftAsyncNameAttr : public InheritableAttr {
@@ -10295,6 +10946,72 @@ public:
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Target; }
+};
+
+class TargetClonesAttr : public InheritableAttr {
+  unsigned featuresStrs_Size;
+  StringRef *featuresStrs_;
+
+public:
+  enum Spelling {
+    GNU_target_clones = 0,
+    CXX11_gnu_target_clones = 1,
+    C2x_gnu_target_clones = 2,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static TargetClonesAttr *CreateImplicit(ASTContext &Ctx, StringRef *FeaturesStrs, unsigned FeaturesStrsSize, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static TargetClonesAttr *Create(ASTContext &Ctx, StringRef *FeaturesStrs, unsigned FeaturesStrsSize, const AttributeCommonInfo &CommonInfo);
+  static TargetClonesAttr *CreateImplicit(ASTContext &Ctx, StringRef *FeaturesStrs, unsigned FeaturesStrsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static TargetClonesAttr *Create(ASTContext &Ctx, StringRef *FeaturesStrs, unsigned FeaturesStrsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  TargetClonesAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , StringRef *FeaturesStrs, unsigned FeaturesStrsSize
+             );
+  TargetClonesAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  TargetClonesAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  typedef StringRef* featuresStrs_iterator;
+  featuresStrs_iterator featuresStrs_begin() const { return featuresStrs_; }
+  featuresStrs_iterator featuresStrs_end() const { return featuresStrs_ + featuresStrs_Size; }
+  unsigned featuresStrs_size() const { return featuresStrs_Size; }
+  llvm::iterator_range<featuresStrs_iterator> featuresStrs() const { return llvm::make_range(featuresStrs_begin(), featuresStrs_end()); }
+
+
+
+    StringRef getFeatureStr(unsigned Index) const {
+      return *(featuresStrs_begin() + Index);
+    }
+    // 'default' is always moved to the end, so it isn't considered
+    // when mangling the index.
+    unsigned getMangledIndex(unsigned Index) const {
+      if (getFeatureStr(Index) == "default")
+        return std::count_if(featuresStrs_begin(), featuresStrs_end(),
+                              [](StringRef S) { return S != "default"; });
+
+      return std::count_if(featuresStrs_begin(), featuresStrs_begin() + Index,
+                           [](StringRef S) { return S != "default"; });
+    }
+
+    // True if this is the first of this version to appear in the config string.
+    // This is used to make sure we don't try to emit this function multiple
+    // times.
+    bool isFirstOfVersion(unsigned Index) const {
+      StringRef FeatureStr(getFeatureStr(Index));
+      return 0 == std::count_if(
+                      featuresStrs_begin(), featuresStrs_begin() + Index,
+                      [FeatureStr](StringRef S) { return S == FeatureStr; });
+    }
+  
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::TargetClones; }
 };
 
 class TestTypestateAttr : public InheritableAttr {
@@ -10944,6 +11661,34 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Used; }
+};
+
+class UsingIfExistsAttr : public InheritableAttr {
+public:
+  enum Spelling {
+    GNU_using_if_exists = 0,
+    CXX11_clang_using_if_exists = 1,
+  SpellingNotCalculated = 15
+
+  };
+
+  // Factory methods
+  static UsingIfExistsAttr *CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo = {SourceRange{}});
+  static UsingIfExistsAttr *Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo);
+  static UsingIfExistsAttr *CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+  static UsingIfExistsAttr *Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax);
+
+  // Constructors
+  UsingIfExistsAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             );
+
+  UsingIfExistsAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::UsingIfExists; }
 };
 
 class UuidAttr : public InheritableAttr {

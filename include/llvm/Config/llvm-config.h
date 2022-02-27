@@ -50,6 +50,9 @@
 /* LLVM name for the native target MC init function, if available */
 #define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
 
+/* LLVM name for the native target MCA init function, if available */
+/* #undef LLVM_NATIVE_TARGETMCA */
+
 /* Define if this is Unixish platform */
 #define LLVM_ON_UNIX 1
 
@@ -63,16 +66,16 @@
 #define LLVM_USE_PERF 0
 
 /* Major version of the LLVM API */
-#define LLVM_VERSION_MAJOR 12
+#define LLVM_VERSION_MAJOR 14
 
 /* Minor version of the LLVM API */
 #define LLVM_VERSION_MINOR 0
 
 /* Patch version of the LLVM API */
-#define LLVM_VERSION_PATCH 5
+#define LLVM_VERSION_PATCH 2
 
 /* LLVM version string */
-#define LLVM_VERSION_STRING "12.0.5git"
+#define LLVM_VERSION_STRING "14.0.2git"
 
 /* Whether LLVM records statistics for use with GetStatistics(),
  * PrintStatistics() or PrintStatisticsJSON()
@@ -92,6 +95,9 @@
 #define HAVE_SYSEXITS_H 1
 
 /* Define to 1 to enable the experimental new pass manager by default */
-#define LLVM_ENABLE_NEW_PASS_MANAGER 0
+#define LLVM_ENABLE_NEW_PASS_MANAGER 1
+
+/* Define if the xar_open() function is supported on this platform. */
+/* #undef LLVM_HAVE_LIBXAR */
 
 #endif

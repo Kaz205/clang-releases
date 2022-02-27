@@ -64,7 +64,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_Weak;	 // "weak"
     }
     break;
-  case 5:	 // 6 strings to match.
+  case 5:	 // 7 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 1 string to match.
@@ -84,6 +84,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_Const;	 // "const"
       }
       break;
+    case 'e':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "rror", 4) != 0)
+        break;
+      return AttributeCommonInfo::AT_Error;	 // "error"
     case 'i':	 // 1 string to match.
       if (memcmp(Name.data()+1, "func", 4) != 0)
         break;
@@ -103,7 +107,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 6:	 // 16 strings to match.
+  case 6:	 // 17 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 1 string to match.
@@ -166,6 +170,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_Pascal;	 // "pascal"
       }
       break;
+    case 'r':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "etain", 5) != 0)
+        break;
+      return AttributeCommonInfo::AT_Retain;	 // "retain"
     case 's':	 // 2 strings to match.
       switch (Name[1]) {
       default: break;
@@ -189,7 +197,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_Unused;	 // "unused"
     }
     break;
-  case 7:	 // 20 strings to match.
+  case 7:	 // 22 strings to match.
     switch (Name[0]) {
     default: break;
     case '_':	 // 1 string to match.
@@ -221,10 +229,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "latten", 6) != 0)
         break;
       return AttributeCommonInfo::AT_Flatten;	 // "flatten"
-    case 'm':	 // 1 string to match.
-      if (memcmp(Name.data()+1, "insize", 6) != 0)
-        break;
-      return AttributeCommonInfo::AT_MinSize;	 // "minsize"
+    case 'm':	 // 2 strings to match.
+      switch (Name[1]) {
+      default: break;
+      case 'a':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "naged", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_HIPManaged;	 // "managed"
+      case 'i':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "nsize", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_MinSize;	 // "minsize"
+      }
+      break;
     case 'n':	 // 6 strings to match.
       switch (Name[1]) {
       default: break;
@@ -307,13 +324,22 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_StdCall;	 // "stdcall"
       }
       break;
-    case 'w':	 // 1 string to match.
-      if (memcmp(Name.data()+1, "eakref", 6) != 0)
-        break;
-      return AttributeCommonInfo::AT_WeakRef;	 // "weakref"
+    case 'w':	 // 2 strings to match.
+      switch (Name[1]) {
+      default: break;
+      case 'a':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "rning", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_Error;	 // "warning"
+      case 'e':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "akref", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_WeakRef;	 // "weakref"
+      }
+      break;
     }
     break;
-  case 8:	 // 16 strings to match.
+  case 8:	 // 17 strings to match.
     switch (Name[0]) {
     default: break;
     case 'N':	 // 1 string to match.
@@ -360,6 +386,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "ockable", 7) != 0)
         break;
       return AttributeCommonInfo::AT_Lockable;	 // "lockable"
+    case 'm':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "usttail", 7) != 0)
+        break;
+      return AttributeCommonInfo::AT_MustTail;	 // "musttail"
     case 'n':	 // 5 strings to match.
       if (Name[1] != 'o')
         break;
@@ -788,13 +818,28 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 12:	 // 8 strings to match.
+  case 12:	 // 10 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 1 string to match.
       if (memcmp(Name.data()+1, "vailability", 11) != 0)
         break;
       return AttributeCommonInfo::AT_Availability;	 // "availability"
+    case 'b':	 // 2 strings to match.
+      if (memcmp(Name.data()+1, "tf_", 3) != 0)
+        break;
+      switch (Name[4]) {
+      default: break;
+      case 'd':	 // 1 string to match.
+        if (memcmp(Name.data()+5, "ecl_tag", 7) != 0)
+          break;
+        return AttributeCommonInfo::AT_BTFDeclTag;	 // "btf_decl_tag"
+      case 't':	 // 1 string to match.
+        if (memcmp(Name.data()+5, "ype_tag", 7) != 0)
+          break;
+        return AttributeCommonInfo::AT_BTFTypeTag;	 // "btf_type_tag"
+      }
+      break;
     case 'c':	 // 2 strings to match.
       if (memcmp(Name.data()+1, "pu_", 3) != 0)
         break;
@@ -837,7 +882,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_SwiftBridge;	 // "swift_bridge"
     }
     break;
-  case 13:	 // 21 strings to match.
+  case 13:	 // 22 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 2 strings to match.
@@ -951,6 +996,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         break;
       }
       break;
+    case 't':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "arget_clones", 12) != 0)
+        break;
+      return AttributeCommonInfo::AT_TargetClones;	 // "target_clones"
     case 'u':	 // 1 string to match.
       if (memcmp(Name.data()+1, "ninitialized", 12) != 0)
         break;
@@ -965,7 +1014,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_XRayLogArgs;	 // "xray_log_args"
     }
     break;
-  case 14:	 // 17 strings to match.
+  case 14:	 // 18 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 4 strings to match.
@@ -1068,13 +1117,17 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "elease_handle", 13) != 0)
         break;
       return AttributeCommonInfo::AT_ReleaseHandle;	 // "release_handle"
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "wiftasynccall", 13) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncCall;	 // "swiftasynccall"
     case 't':	 // 1 string to match.
       if (memcmp(Name.data()+1, "est_typestate", 13) != 0)
         break;
       return AttributeCommonInfo::AT_TestTypestate;	 // "test_typestate"
     }
     break;
-  case 15:	 // 16 strings to match.
+  case 15:	 // 17 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 3 strings to match.
@@ -1173,13 +1226,22 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "ype_visibility", 14) != 0)
         break;
       return AttributeCommonInfo::AT_TypeVisibility;	 // "type_visibility"
-    case 'u':	 // 1 string to match.
-      if (memcmp(Name.data()+1, "nlock_function", 14) != 0)
-        break;
-      return AttributeCommonInfo::AT_ReleaseCapability;	 // "unlock_function"
+    case 'u':	 // 2 strings to match.
+      switch (Name[1]) {
+      default: break;
+      case 'n':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "lock_function", 13) != 0)
+          break;
+        return AttributeCommonInfo::AT_ReleaseCapability;	 // "unlock_function"
+      case 's':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "ing_if_exists", 13) != 0)
+          break;
+        return AttributeCommonInfo::AT_UsingIfExists;	 // "using_if_exists"
+      }
+      break;
     }
     break;
-  case 16:	 // 9 strings to match.
+  case 16:	 // 10 strings to match.
     switch (Name[0]) {
     default: break;
     case 'e':	 // 1 string to match.
@@ -1219,13 +1281,22 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "eturn_typestate", 15) != 0)
         break;
       return AttributeCommonInfo::AT_ReturnTypestate;	 // "return_typestate"
-    case 's':	 // 1 string to match.
-      if (memcmp(Name.data()+1, "wift_async_name", 15) != 0)
-        break;
-      return AttributeCommonInfo::AT_SwiftAsyncName;	 // "swift_async_name"
+    case 's':	 // 2 strings to match.
+      switch (Name[1]) {
+      default: break;
+      case 't':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "andalone_debug", 14) != 0)
+          break;
+        return AttributeCommonInfo::AT_StandaloneDebug;	 // "standalone_debug"
+      case 'w':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "ift_async_name", 14) != 0)
+          break;
+        return AttributeCommonInfo::AT_SwiftAsyncName;	 // "swift_async_name"
+      }
+      break;
     }
     break;
-  case 17:	 // 6 strings to match.
+  case 17:	 // 7 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 2 strings to match.
@@ -1254,10 +1325,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_Ownership;	 // "ownership_returns"
       }
       break;
-    case 's':	 // 1 string to match.
-      if (memcmp(Name.data()+1, "hared_capability", 16) != 0)
-        break;
-      return AttributeCommonInfo::AT_Capability;	 // "shared_capability"
+    case 's':	 // 2 strings to match.
+      switch (Name[1]) {
+      default: break;
+      case 'h':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "ared_capability", 15) != 0)
+          break;
+        return AttributeCommonInfo::AT_Capability;	 // "shared_capability"
+      case 'w':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "ift_async_error", 15) != 0)
+          break;
+        return AttributeCommonInfo::AT_SwiftAsyncError;	 // "swift_async_error"
+      }
+      break;
     case 't':	 // 1 string to match.
       if (memcmp(Name.data()+1, "ransparent_union", 16) != 0)
         break;
@@ -1390,7 +1470,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_WarnUnusedResult;	 // "warn_unused_result"
     }
     break;
-  case 19:	 // 14 strings to match.
+  case 19:	 // 17 strings to match.
     switch (Name[0]) {
     default: break;
     case 'a':	 // 2 strings to match.
@@ -1406,7 +1486,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_ArmSveVectorBits;	 // "arm_sve_vector_bits"
       }
       break;
-    case 'c':	 // 4 strings to match.
+    case 'c':	 // 5 strings to match.
       switch (Name[1]) {
       default: break;
       case 'f':	 // 3 strings to match.
@@ -1428,12 +1508,20 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_CFUnknownTransfer;	 // "cf_unknown_transfer"
         }
         break;
+      case 'l':	 // 1 string to match.
+        if (memcmp(Name.data()+2, "ang_builtin_alias", 17) != 0)
+          break;
+        return AttributeCommonInfo::AT_BuiltinAlias;	 // "clang_builtin_alias"
       case 'm':	 // 1 string to match.
         if (memcmp(Name.data()+2, "se_nonsecure_call", 17) != 0)
           break;
         return AttributeCommonInfo::AT_CmseNSCall;	 // "cmse_nonsecure_call"
       }
       break;
+    case 'd':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "iagnose_as_builtin", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_DiagnoseAsBuiltin;	 // "diagnose_as_builtin"
     case 'n':	 // 2 strings to match.
       switch (Name[1]) {
       default: break;
@@ -1490,6 +1578,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+1, "equires_capability", 18) != 0)
         break;
       return AttributeCommonInfo::AT_RequiresCapability;	 // "requires_capability"
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "wift_async_context", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncContext;	 // "swift_async_context"
     }
     break;
   case 20:	 // 8 strings to match.
@@ -1846,6 +1938,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_TryAcquireCapability;	 // "try_acquire_shared_capability"
     }
     break;
+  case 30:	 // 1 string to match.
+    if (memcmp(Name.data()+0, "no_profile_instrument_function", 30) != 0)
+      break;
+    return AttributeCommonInfo::AT_NoProfileFunction;	 // "no_profile_instrument_function"
   case 31:	 // 2 strings to match.
     switch (Name[0]) {
     default: break;
@@ -1859,6 +1955,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_ConstInit;	 // "require_constant_initialization"
     }
     break;
+  case 33:	 // 1 string to match.
+    if (memcmp(Name.data()+0, "disable_sanitizer_instrumentation", 33) != 0)
+      break;
+    return AttributeCommonInfo::AT_DisableSanitizerInstrumentation;	 // "disable_sanitizer_instrumentation"
   case 34:	 // 1 string to match.
     if (memcmp(Name.data()+0, "objc_requires_property_definitions", 34) != 0)
       break;
@@ -2028,10 +2128,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_Deprecated;	 // "deprecated"
     }
     break;
-  case 11:	 // 1 string to match.
-    if (memcmp(Name.data()+0, "empty_bases", 11) != 0)
-      break;
-    return AttributeCommonInfo::AT_EmptyBases;	 // "empty_bases"
+  case 11:	 // 2 strings to match.
+    switch (Name[0]) {
+    default: break;
+    case '_':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "_managed__", 10) != 0)
+        break;
+      return AttributeCommonInfo::AT_HIPManaged;	 // "__managed__"
+    case 'e':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "mpty_bases", 10) != 0)
+        break;
+      return AttributeCommonInfo::AT_EmptyBases;	 // "empty_bases"
+    }
+    break;
   case 12:	 // 3 strings to match.
     switch (Name[0]) {
     default: break;
@@ -2186,17 +2295,17 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_WarnUnusedResult;	 // "nodiscard"
     }
     break;
-  case 10:	 // 7 strings to match.
+  case 10:	 // 8 strings to match.
     switch (Name[0]) {
     default: break;
     case 'd':	 // 1 string to match.
       if (memcmp(Name.data()+1, "eprecated", 9) != 0)
         break;
       return AttributeCommonInfo::AT_Deprecated;	 // "deprecated"
-    case 'g':	 // 6 strings to match.
+    case 'g':	 // 7 strings to match.
       switch (Name[1]) {
       default: break;
-      case 'n':	 // 5 strings to match.
+      case 'n':	 // 6 strings to match.
         if (memcmp(Name.data()+2, "u::", 3) != 0)
           break;
         switch (Name[5]) {
@@ -2218,6 +2327,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
             return AttributeCommonInfo::AT_Const;	 // "gnu::const"
           }
           break;
+        case 'e':	 // 1 string to match.
+          if (memcmp(Name.data()+6, "rror", 4) != 0)
+            break;
+          return AttributeCommonInfo::AT_Error;	 // "gnu::error"
         case 'i':	 // 1 string to match.
           if (memcmp(Name.data()+6, "func", 4) != 0)
             break;
@@ -2236,14 +2349,14 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 11:	 // 10 strings to match.
+  case 11:	 // 11 strings to match.
     switch (Name[0]) {
     default: break;
     case 'f':	 // 1 string to match.
       if (memcmp(Name.data()+1, "allthrough", 10) != 0)
         break;
       return AttributeCommonInfo::AT_FallThrough;	 // "fallthrough"
-    case 'g':	 // 9 strings to match.
+    case 'g':	 // 10 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -2277,6 +2390,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+6, "acked", 5) != 0)
           break;
         return AttributeCommonInfo::AT_Packed;	 // "gnu::packed"
+      case 'r':	 // 1 string to match.
+        if (memcmp(Name.data()+6, "etain", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_Retain;	 // "gnu::retain"
       case 's':	 // 1 string to match.
         if (memcmp(Name.data()+6, "ignal", 5) != 0)
           break;
@@ -2293,13 +2410,13 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 12:	 // 15 strings to match.
+  case 12:	 // 16 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'g':	 // 14 strings to match.
+    case 'g':	 // 15 strings to match.
       switch (Name[1]) {
       default: break;
-      case 'n':	 // 13 strings to match.
+      case 'n':	 // 14 strings to match.
         if (memcmp(Name.data()+2, "u::", 3) != 0)
           break;
         switch (Name[5]) {
@@ -2376,10 +2493,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
             return AttributeCommonInfo::AT_StdCall;	 // "gnu::stdcall"
           }
           break;
-        case 'w':	 // 1 string to match.
-          if (memcmp(Name.data()+6, "eakref", 6) != 0)
-            break;
-          return AttributeCommonInfo::AT_WeakRef;	 // "gnu::weakref"
+        case 'w':	 // 2 strings to match.
+          switch (Name[6]) {
+          default: break;
+          case 'a':	 // 1 string to match.
+            if (memcmp(Name.data()+7, "rning", 5) != 0)
+              break;
+            return AttributeCommonInfo::AT_Error;	 // "gnu::warning"
+          case 'e':	 // 1 string to match.
+            if (memcmp(Name.data()+7, "akref", 5) != 0)
+              break;
+            return AttributeCommonInfo::AT_WeakRef;	 // "gnu::weakref"
+          }
+          break;
         }
         break;
       case 's':	 // 1 string to match.
@@ -2577,10 +2703,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 15:	 // 15 strings to match.
+  case 15:	 // 16 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 6 strings to match.
+    case 'c':	 // 7 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -2612,6 +2738,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_IBOutlet;	 // "clang::iboutlet"
         }
         break;
+      case 'm':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "usttail", 7) != 0)
+          break;
+        return AttributeCommonInfo::AT_MustTail;	 // "clang::musttail"
       case 'n':	 // 1 string to match.
         if (memcmp(Name.data()+8, "oescape", 7) != 0)
           break;
@@ -2793,7 +2923,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_NoUniqueAddress;	 // "no_unique_address"
     }
     break;
-  case 18:	 // 23 strings to match.
+  case 18:	 // 24 strings to match.
     switch (Name[0]) {
     default: break;
     case 'c':	 // 20 strings to match.
@@ -2925,7 +3055,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         break;
       }
       break;
-    case 'g':	 // 3 strings to match.
+    case 'g':	 // 4 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -2942,14 +3072,18 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+6, "eturns_twice", 12) != 0)
           break;
         return AttributeCommonInfo::AT_ReturnsTwice;	 // "gnu::returns_twice"
+      case 't':	 // 1 string to match.
+        if (memcmp(Name.data()+6, "arget_clones", 12) != 0)
+          break;
+        return AttributeCommonInfo::AT_TargetClones;	 // "gnu::target_clones"
       }
       break;
     }
     break;
-  case 19:	 // 9 strings to match.
+  case 19:	 // 11 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 7 strings to match.
+    case 'c':	 // 9 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -2958,6 +3092,21 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "vailability", 11) != 0)
           break;
         return AttributeCommonInfo::AT_Availability;	 // "clang::availability"
+      case 'b':	 // 2 strings to match.
+        if (memcmp(Name.data()+8, "tf_", 3) != 0)
+          break;
+        switch (Name[11]) {
+        default: break;
+        case 'd':	 // 1 string to match.
+          if (memcmp(Name.data()+12, "ecl_tag", 7) != 0)
+            break;
+          return AttributeCommonInfo::AT_BTFDeclTag;	 // "clang::btf_decl_tag"
+        case 't':	 // 1 string to match.
+          if (memcmp(Name.data()+12, "ype_tag", 7) != 0)
+            break;
+          return AttributeCommonInfo::AT_BTFTypeTag;	 // "clang::btf_type_tag"
+        }
+        break;
       case 'c':	 // 2 strings to match.
         if (memcmp(Name.data()+8, "pu_", 3) != 0)
           break;
@@ -3013,10 +3162,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 20:	 // 12 strings to match.
+  case 20:	 // 13 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 11 strings to match.
+    case 'c':	 // 12 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -3025,6 +3174,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "ddress_space", 12) != 0)
           break;
         return AttributeCommonInfo::AT_AddressSpace;	 // "clang::address_space"
+      case 'b':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "uiltin_alias", 12) != 0)
+          break;
+        return AttributeCommonInfo::AT_BuiltinAlias;	 // "clang::builtin_alias"
       case 'c':	 // 1 string to match.
         if (memcmp(Name.data()+8, "allable_when", 12) != 0)
           break;
@@ -3078,7 +3231,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_ReturnsNonNull;	 // "gnu::returns_nonnull"
     }
     break;
-  case 21:	 // 11 strings to match.
+  case 21:	 // 12 strings to match.
     if (memcmp(Name.data()+0, "clang::", 7) != 0)
       break;
     switch (Name[7]) {
@@ -3152,16 +3305,20 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+8, "elease_handle", 13) != 0)
         break;
       return AttributeCommonInfo::AT_ReleaseHandle;	 // "clang::release_handle"
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "wiftasynccall", 13) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncCall;	 // "clang::swiftasynccall"
     case 't':	 // 1 string to match.
       if (memcmp(Name.data()+8, "est_typestate", 13) != 0)
         break;
       return AttributeCommonInfo::AT_TestTypestate;	 // "clang::test_typestate"
     }
     break;
-  case 22:	 // 13 strings to match.
+  case 22:	 // 14 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 12 strings to match.
+    case 'c':	 // 13 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -3236,10 +3393,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "ype_visibility", 14) != 0)
           break;
         return AttributeCommonInfo::AT_TypeVisibility;	 // "clang::type_visibility"
-      case 'u':	 // 1 string to match.
-        if (memcmp(Name.data()+8, "nlock_function", 14) != 0)
-          break;
-        return AttributeCommonInfo::AT_ReleaseCapability;	 // "clang::unlock_function"
+      case 'u':	 // 2 strings to match.
+        switch (Name[8]) {
+        default: break;
+        case 'n':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "lock_function", 13) != 0)
+            break;
+          return AttributeCommonInfo::AT_ReleaseCapability;	 // "clang::unlock_function"
+        case 's':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "ing_if_exists", 13) != 0)
+            break;
+          return AttributeCommonInfo::AT_UsingIfExists;	 // "clang::using_if_exists"
+        }
+        break;
       }
       break;
     case 'g':	 // 1 string to match.
@@ -3248,10 +3414,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_TransparentUnion;	 // "gnu::transparent_union"
     }
     break;
-  case 23:	 // 10 strings to match.
+  case 23:	 // 11 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 8 strings to match.
+    case 'c':	 // 9 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -3293,6 +3459,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "eturn_typestate", 15) != 0)
           break;
         return AttributeCommonInfo::AT_ReturnTypestate;	 // "clang::return_typestate"
+      case 's':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "tandalone_debug", 15) != 0)
+          break;
+        return AttributeCommonInfo::AT_StandaloneDebug;	 // "clang::standalone_debug"
       }
       break;
     case 'g':	 // 2 strings to match.
@@ -3312,10 +3482,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 24:	 // 5 strings to match.
+  case 24:	 // 6 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 4 strings to match.
+    case 'c':	 // 5 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -3337,10 +3507,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_Ownership;	 // "clang::ownership_returns"
         }
         break;
-      case 's':	 // 1 string to match.
-        if (memcmp(Name.data()+8, "hared_capability", 16) != 0)
-          break;
-        return AttributeCommonInfo::AT_Capability;	 // "clang::shared_capability"
+      case 's':	 // 2 strings to match.
+        switch (Name[8]) {
+        default: break;
+        case 'h':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "ared_capability", 15) != 0)
+            break;
+          return AttributeCommonInfo::AT_Capability;	 // "clang::shared_capability"
+        case 'w':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "ift_async_error", 15) != 0)
+            break;
+          return AttributeCommonInfo::AT_SwiftAsyncError;	 // "clang::swift_async_error"
+        }
+        break;
       }
       break;
     case 'g':	 // 1 string to match.
@@ -3436,7 +3615,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_WarnUnusedResult;	 // "clang::warn_unused_result"
     }
     break;
-  case 26:	 // 11 strings to match.
+  case 26:	 // 13 strings to match.
     if (memcmp(Name.data()+0, "clang::", 7) != 0)
       break;
     switch (Name[7]) {
@@ -3464,6 +3643,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_CFUnknownTransfer;	 // "clang::cf_unknown_transfer"
       }
       break;
+    case 'd':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "iagnose_as_builtin", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_DiagnoseAsBuiltin;	 // "clang::diagnose_as_builtin"
     case 'n':	 // 1 string to match.
       if (memcmp(Name.data()+8, "s_returns_retained", 18) != 0)
         break;
@@ -3511,6 +3694,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+8, "equires_capability", 18) != 0)
         break;
       return AttributeCommonInfo::AT_RequiresCapability;	 // "clang::requires_capability"
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "wift_async_context", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncContext;	 // "clang::swift_async_context"
     }
     break;
   case 27:	 // 5 strings to match.
@@ -3815,10 +4002,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 35:	 // 1 string to match.
-    if (memcmp(Name.data()+0, "clang::consumable_set_state_on_read", 35) != 0)
-      break;
-    return AttributeCommonInfo::AT_ConsumableSetOnRead;	 // "clang::consumable_set_state_on_read"
+  case 35:	 // 2 strings to match.
+    switch (Name[0]) {
+    default: break;
+    case 'c':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "lang::consumable_set_state_on_read", 34) != 0)
+        break;
+      return AttributeCommonInfo::AT_ConsumableSetOnRead;	 // "clang::consumable_set_state_on_read"
+    case 'g':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "nu::no_profile_instrument_function", 34) != 0)
+        break;
+      return AttributeCommonInfo::AT_NoProfileFunction;	 // "gnu::no_profile_instrument_function"
+    }
+    break;
   case 36:	 // 2 strings to match.
     if (memcmp(Name.data()+0, "clang::", 7) != 0)
       break;
@@ -3849,6 +4045,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_ConstInit;	 // "clang::require_constant_initialization"
     }
     break;
+  case 40:	 // 1 string to match.
+    if (memcmp(Name.data()+0, "clang::disable_sanitizer_instrumentation", 40) != 0)
+      break;
+    return AttributeCommonInfo::AT_DisableSanitizerInstrumentation;	 // "clang::disable_sanitizer_instrumentation"
   case 41:	 // 1 string to match.
     if (memcmp(Name.data()+0, "clang::objc_requires_property_definitions", 41) != 0)
       break;
@@ -3943,14 +4143,14 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_WarnUnusedResult;	 // "nodiscard"
     }
     break;
-  case 10:	 // 6 strings to match.
+  case 10:	 // 7 strings to match.
     switch (Name[0]) {
     default: break;
     case 'd':	 // 1 string to match.
       if (memcmp(Name.data()+1, "eprecated", 9) != 0)
         break;
       return AttributeCommonInfo::AT_Deprecated;	 // "deprecated"
-    case 'g':	 // 5 strings to match.
+    case 'g':	 // 6 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -3972,6 +4172,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_Const;	 // "gnu::const"
         }
         break;
+      case 'e':	 // 1 string to match.
+        if (memcmp(Name.data()+6, "rror", 4) != 0)
+          break;
+        return AttributeCommonInfo::AT_Error;	 // "gnu::error"
       case 'i':	 // 1 string to match.
         if (memcmp(Name.data()+6, "func", 4) != 0)
           break;
@@ -3984,14 +4188,14 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 11:	 // 10 strings to match.
+  case 11:	 // 11 strings to match.
     switch (Name[0]) {
     default: break;
     case 'f':	 // 1 string to match.
       if (memcmp(Name.data()+1, "allthrough", 10) != 0)
         break;
       return AttributeCommonInfo::AT_FallThrough;	 // "fallthrough"
-    case 'g':	 // 9 strings to match.
+    case 'g':	 // 10 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -4025,6 +4229,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+6, "acked", 5) != 0)
           break;
         return AttributeCommonInfo::AT_Packed;	 // "gnu::packed"
+      case 'r':	 // 1 string to match.
+        if (memcmp(Name.data()+6, "etain", 5) != 0)
+          break;
+        return AttributeCommonInfo::AT_Retain;	 // "gnu::retain"
       case 's':	 // 1 string to match.
         if (memcmp(Name.data()+6, "ignal", 5) != 0)
           break;
@@ -4041,10 +4249,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 12:	 // 13 strings to match.
+  case 12:	 // 14 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'g':	 // 12 strings to match.
+    case 'g':	 // 13 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -4112,10 +4320,19 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_StdCall;	 // "gnu::stdcall"
         }
         break;
-      case 'w':	 // 1 string to match.
-        if (memcmp(Name.data()+6, "eakref", 6) != 0)
-          break;
-        return AttributeCommonInfo::AT_WeakRef;	 // "gnu::weakref"
+      case 'w':	 // 2 strings to match.
+        switch (Name[6]) {
+        default: break;
+        case 'a':	 // 1 string to match.
+          if (memcmp(Name.data()+7, "rning", 5) != 0)
+            break;
+          return AttributeCommonInfo::AT_Error;	 // "gnu::warning"
+        case 'e':	 // 1 string to match.
+          if (memcmp(Name.data()+7, "akref", 5) != 0)
+            break;
+          return AttributeCommonInfo::AT_WeakRef;	 // "gnu::weakref"
+        }
+        break;
       }
       break;
     case 'm':	 // 1 string to match.
@@ -4302,10 +4519,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 15:	 // 16 strings to match.
+  case 15:	 // 17 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 7 strings to match.
+    case 'c':	 // 8 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -4337,6 +4554,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
           return AttributeCommonInfo::AT_IBOutlet;	 // "clang::iboutlet"
         }
         break;
+      case 'm':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "usttail", 7) != 0)
+          break;
+        return AttributeCommonInfo::AT_MustTail;	 // "clang::musttail"
       case 'n':	 // 1 string to match.
         if (memcmp(Name.data()+8, "oescape", 7) != 0)
           break;
@@ -4478,7 +4699,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_VectorCall;	 // "clang::vectorcall"
     }
     break;
-  case 18:	 // 18 strings to match.
+  case 18:	 // 19 strings to match.
     switch (Name[0]) {
     default: break;
     case 'c':	 // 16 strings to match.
@@ -4589,7 +4810,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_WeakImport;	 // "clang::weak_import"
       }
       break;
-    case 'g':	 // 2 strings to match.
+    case 'g':	 // 3 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4) != 0)
         break;
       switch (Name[5]) {
@@ -4602,14 +4823,18 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+6, "eturns_twice", 12) != 0)
           break;
         return AttributeCommonInfo::AT_ReturnsTwice;	 // "gnu::returns_twice"
+      case 't':	 // 1 string to match.
+        if (memcmp(Name.data()+6, "arget_clones", 12) != 0)
+          break;
+        return AttributeCommonInfo::AT_TargetClones;	 // "gnu::target_clones"
       }
       break;
     }
     break;
-  case 19:	 // 9 strings to match.
+  case 19:	 // 11 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 7 strings to match.
+    case 'c':	 // 9 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -4618,6 +4843,21 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "vailability", 11) != 0)
           break;
         return AttributeCommonInfo::AT_Availability;	 // "clang::availability"
+      case 'b':	 // 2 strings to match.
+        if (memcmp(Name.data()+8, "tf_", 3) != 0)
+          break;
+        switch (Name[11]) {
+        default: break;
+        case 'd':	 // 1 string to match.
+          if (memcmp(Name.data()+12, "ecl_tag", 7) != 0)
+            break;
+          return AttributeCommonInfo::AT_BTFDeclTag;	 // "clang::btf_decl_tag"
+        case 't':	 // 1 string to match.
+          if (memcmp(Name.data()+12, "ype_tag", 7) != 0)
+            break;
+          return AttributeCommonInfo::AT_BTFTypeTag;	 // "clang::btf_type_tag"
+        }
+        break;
       case 'c':	 // 2 strings to match.
         if (memcmp(Name.data()+8, "pu_", 3) != 0)
           break;
@@ -4673,10 +4913,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 20:	 // 7 strings to match.
+  case 20:	 // 8 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 6 strings to match.
+    case 'c':	 // 7 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
       switch (Name[7]) {
@@ -4685,6 +4925,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         if (memcmp(Name.data()+8, "ddress_space", 12) != 0)
           break;
         return AttributeCommonInfo::AT_AddressSpace;	 // "clang::address_space"
+      case 'b':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "uiltin_alias", 12) != 0)
+          break;
+        return AttributeCommonInfo::AT_BuiltinAlias;	 // "clang::builtin_alias"
       case 'i':	 // 1 string to match.
         if (memcmp(Name.data()+8, "mport_module", 12) != 0)
           break;
@@ -4713,7 +4957,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_ReturnsNonNull;	 // "gnu::returns_nonnull"
     }
     break;
-  case 21:	 // 6 strings to match.
+  case 21:	 // 7 strings to match.
     if (memcmp(Name.data()+0, "clang::", 7) != 0)
       break;
     switch (Name[7]) {
@@ -4761,6 +5005,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       if (memcmp(Name.data()+8, "elease_handle", 13) != 0)
         break;
       return AttributeCommonInfo::AT_ReleaseHandle;	 // "clang::release_handle"
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "wiftasynccall", 13) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncCall;	 // "clang::swiftasynccall"
     }
     break;
   case 22:	 // 8 strings to match.
@@ -4886,22 +5134,31 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       break;
     }
     break;
-  case 24:	 // 3 strings to match.
+  case 24:	 // 4 strings to match.
     switch (Name[0]) {
     default: break;
-    case 'c':	 // 2 strings to match.
-      if (memcmp(Name.data()+1, "lang::o", 7) != 0)
+    case 'c':	 // 3 strings to match.
+      if (memcmp(Name.data()+1, "lang::", 6) != 0)
         break;
-      switch (Name[8]) {
+      switch (Name[7]) {
       default: break;
-      case 'b':	 // 1 string to match.
-        if (memcmp(Name.data()+9, "jc_runtime_name", 15) != 0)
+      case 'o':	 // 2 strings to match.
+        switch (Name[8]) {
+        default: break;
+        case 'b':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "jc_runtime_name", 15) != 0)
+            break;
+          return AttributeCommonInfo::AT_ObjCRuntimeName;	 // "clang::objc_runtime_name"
+        case 'w':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "nership_returns", 15) != 0)
+            break;
+          return AttributeCommonInfo::AT_Ownership;	 // "clang::ownership_returns"
+        }
+        break;
+      case 's':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "wift_async_error", 16) != 0)
           break;
-        return AttributeCommonInfo::AT_ObjCRuntimeName;	 // "clang::objc_runtime_name"
-      case 'w':	 // 1 string to match.
-        if (memcmp(Name.data()+9, "nership_returns", 15) != 0)
-          break;
-        return AttributeCommonInfo::AT_Ownership;	 // "clang::ownership_returns"
+        return AttributeCommonInfo::AT_SwiftAsyncError;	 // "clang::swift_async_error"
       }
       break;
     case 'g':	 // 1 string to match.
@@ -4980,7 +5237,7 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_SwiftErrorResult;	 // "clang::swift_error_result"
     }
     break;
-  case 26:	 // 9 strings to match.
+  case 26:	 // 11 strings to match.
     if (memcmp(Name.data()+0, "clang::", 7) != 0)
       break;
     switch (Name[7]) {
@@ -5004,6 +5261,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_CFUnknownTransfer;	 // "clang::cf_unknown_transfer"
       }
       break;
+    case 'd':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "iagnose_as_builtin", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_DiagnoseAsBuiltin;	 // "clang::diagnose_as_builtin"
     case 'n':	 // 1 string to match.
       if (memcmp(Name.data()+8, "s_returns_retained", 18) != 0)
         break;
@@ -5047,6 +5308,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
         return AttributeCommonInfo::AT_OSReturnsRetained;	 // "clang::os_returns_retained"
       }
       break;
+    case 's':	 // 1 string to match.
+      if (memcmp(Name.data()+8, "wift_async_context", 18) != 0)
+        break;
+      return AttributeCommonInfo::AT_SwiftAsyncContext;	 // "clang::swift_async_context"
     }
     break;
   case 27:	 // 5 strings to match.
@@ -5294,6 +5559,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
       return AttributeCommonInfo::AT_OSReturnsRetainedOnZero;	 // "clang::os_returns_retained_on_zero"
     }
     break;
+  case 35:	 // 1 string to match.
+    if (memcmp(Name.data()+0, "gnu::no_profile_instrument_function", 35) != 0)
+      break;
+    return AttributeCommonInfo::AT_NoProfileFunction;	 // "gnu::no_profile_instrument_function"
   case 36:	 // 1 string to match.
     if (memcmp(Name.data()+0, "clang::no_speculative_load_hardening", 36) != 0)
       break;
@@ -5302,6 +5571,10 @@ static AttributeCommonInfo::Kind getAttrKind(StringRef Name, AttributeCommonInfo
     if (memcmp(Name.data()+0, "clang::os_returns_retained_on_non_zero", 38) != 0)
       break;
     return AttributeCommonInfo::AT_OSReturnsRetainedOnNonZero;	 // "clang::os_returns_retained_on_non_zero"
+  case 40:	 // 1 string to match.
+    if (memcmp(Name.data()+0, "clang::disable_sanitizer_instrumentation", 40) != 0)
+      break;
+    return AttributeCommonInfo::AT_DisableSanitizerInstrumentation;	 // "clang::disable_sanitizer_instrumentation"
   case 41:	 // 1 string to match.
     if (memcmp(Name.data()+0, "clang::objc_requires_property_definitions", 41) != 0)
       break;

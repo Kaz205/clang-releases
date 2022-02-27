@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- __debug ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -270,4 +270,4 @@ _LIBCPP_FUNC_VIS const __libcpp_db* __get_const_db();
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_DEBUG_H
+#endif // _LIBCPP_DEBUG_H
