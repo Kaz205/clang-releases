@@ -1,3 +1,9 @@
+if [ -z "$1" ]
+then
+   echo "No Clang version specified"
+   exit
+fi
+
 export CLANG_VERSION=clang-$1
 rm -rf linux-x86
 git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 -b master --depth=1 -j$(nproc --all)
